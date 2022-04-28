@@ -1,0 +1,10 @@
+version: "3.5"
+services:
+  ortools:
+    image: optasio/ortools:${ORTOOLS_VERSION:-v9.3}
+    build:
+      dockerfile: Dockerfile
+      context: .
+      args:
+        - ORTOOLS_VERSION=${ORTOOLS_VERSION:-v9.3}
+

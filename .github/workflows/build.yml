@@ -1,0 +1,90 @@
+name: Docker
+
+on:
+  push:
+    # Publish `v1.2.3` tags as releases.
+    branches:
+      - main
+
+  # Run tests for any PRs.
+  pull_request:
+
+env:
+  # TODO: Change variable to your image's name.
+  IMAGE_NAME: ortools
+  DOCKER_ID: optasioimg
+
+jobs:
+  # Run tests.
+  # See also https://docs.docker.com/docker-hub/builds/automated-testing/
+  build:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Build image
+        run: |
+          for ORTOOLS_VERSION in $(cat ORTOOLS_VERSIONS); do
+          
+            echo "ORTOOLS_VERSION: $ORTOOLS_VERSION"
+            docker-compose -f build.yml build 
+            
+          done
+  # Push image to GitHub Packages.
+  # See also https://docs.docker.com/docker-hub/builds/
+  push:
+    # Ensure test job passes before pushing image.
+    needs: test
+
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build images
+        run: |
+          for ORTOOLS_VERSION in $(cat ORTOOLS_VERSIONS); do
+          
+            echo "ORTOOLS_VERSION: $ORTOOLS_VERSION"
+            docker-compose -f build.yml build 
+            
+      - name: Log into registry
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+          echo "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}" | docker login docker.io -u $DOCKER_ID --password-stdin
+      - name: Push image
+        run: |
+          for ORTOOLS_VERSION in $(cat ORTOOLS_VERSIONS); do
+          
+            echo "PUSH for ORTOOLS_VERSION: $ORTOOLS_VERSION"
+          
+            IMAGE_ID_GITHUB_PKG=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME
+            IMAGE_ID_DOCKER_HUB=docker.io/$DOCKER_ID/$IMAGE_NAME
+            # Change all uppercase to lowercase
+            IMAGE_ID_GITHUB_PKG=$(echo $IMAGE_ID_GITHUB_PKG | tr '[A-Z]' '[a-z]')
+            IMAGE_ID_DOCKER_HUB=$(echo $IMAGE_ID_DOCKER_HUB | tr '[A-Z]' '[a-z]')
+            echo IMAGE_ID_GITHUB_PKG=$IMAGE_ID_GITHUB_PKG
+            echo IMAGE_ID_DOCKER_HUB=$IMAGE_ID_DOCKER_HUB
+            echo ORTOOLS_VERSION=$ORTOOLS_VERSION
+            GIT_HASH=$(git rev-parse --short "$GITHUB_SHA")
+          
+            docker tag $IMAGE_NAME-$ORTOOLS_VERSION $IMAGE_ID_GITHUB_PKG:$ORTOOLS_VERSION
+            docker push $IMAGE_ID_GITHUB_PKG:$ORTOOLS_VERSION
+            docker tag $IMAGE_NAME-$ORTOOLS_VERSION $IMAGE_ID_GITHUB_PKG-$ORTOOLS_VERSION:$GIT_HASH
+            docker push $IMAGE_ID_GITHUB_PKG-$ORTOOLS_VERSION:$GIT_HASH
+            docker tag $IMAGE_NAME-$ORTOOLS_VERSION $IMAGE_ID_GITHUB_PKG-$ORTOOLS_VERSION:latest
+            docker push $IMAGE_ID_GITHUB_PKG-$ORTOOLS_VERSION:latest
+                    
+            docker tag $IMAGE_NAME-$ORTOOLS_VERSION $IMAGE_ID_DOCKER_HUB:$ORTOOLS_VERSION 
+            docker push $IMAGE_ID_DOCKER_HUB:$ORTOOLS_VERSION
+            docker tag $IMAGE_NAME-$ORTOOLS_VERSION $IMAGE_ID_DOCKER_HUB-$ORTOOLS_VERSION:$GIT_HASH
+            docker push $IMAGE_ID_DOCKER_HUB-$ORTOOLS_VERSION:$GIT_HASH
+            docker tag $IMAGE_NAME-$ORTOOLS_VERSION $IMAGE_ID_DOCKER_HUB-$ORTOOLS_VERSION:latest
+            docker push $IMAGE_ID_DOCKER_HUB-$ORTOOLS_VERSION:latest
+            
+          done
