@@ -56,8 +56,8 @@ jobs:
           
             echo "PUSH for ORTOOLS_VERSION: $ORTOOLS_VERSION"
           
-            IMAGE_ID_GITHUB_PKG=ghcr.io/optasio/$IMAGE_NAME
-            IMAGE_ID_DOCKER_HUB=docker.io/$DOCKER_ID/$IMAGE_NAME
+            IMAGE_ID_GITHUB_PKG=ghcr.io/$IMAGE_NAME
+            IMAGE_ID_DOCKER_HUB=docker.io/$DOCKER_ID/ortools
             # Change all uppercase to lowercase
             IMAGE_ID_GITHUB_PKG=$(echo $IMAGE_ID_GITHUB_PKG | tr '[A-Z]' '[a-z]')
             IMAGE_ID_DOCKER_HUB=$(echo $IMAGE_ID_DOCKER_HUB | tr '[A-Z]' '[a-z]')
