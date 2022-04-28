@@ -19,7 +19,7 @@ jobs:
   # See also https://docs.docker.com/docker-hub/builds/automated-testing/
   build:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
+    if: github.event_name != 'push'
 
     steps:
       - uses: actions/checkout@v3
@@ -37,8 +37,6 @@ jobs:
   # Push image to GitHub Packages.
   # See also https://docs.docker.com/docker-hub/builds/
   push:
-    # Ensure test job passes before pushing image.
-    needs: test
 
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
