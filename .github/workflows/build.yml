@@ -15,16 +15,12 @@ env:
   DOCKER_ID: optasioimg
 
 jobs:
-  # Run tests.
-  # See also https://docs.docker.com/docker-hub/builds/automated-testing/
   build:
     runs-on: ubuntu-latest
     if: github.event_name != 'push'
 
     steps:
       - uses: actions/checkout@v3
-        with:
-          submodules: true
 
       - name: Build image
         run: |
@@ -34,15 +30,13 @@ jobs:
             docker-compose -f build.yml build 
             
           done
-  # Push image to GitHub Packages.
-  # See also https://docs.docker.com/docker-hub/builds/
-  push:
+  release:
 
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Build images
         run: |
@@ -54,7 +48,7 @@ jobs:
           done
       - name: Log into registry
         run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u optasio --password-stdin
           echo "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}" | docker login docker.io -u $DOCKER_ID --password-stdin
       - name: Push image
         run: |
@@ -62,7 +56,7 @@ jobs:
           
             echo "PUSH for ORTOOLS_VERSION: $ORTOOLS_VERSION"
           
-            IMAGE_ID_GITHUB_PKG=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME
+            IMAGE_ID_GITHUB_PKG=ghcr.io/optasio/$IMAGE_NAME
             IMAGE_ID_DOCKER_HUB=docker.io/$DOCKER_ID/$IMAGE_NAME
             # Change all uppercase to lowercase
             IMAGE_ID_GITHUB_PKG=$(echo $IMAGE_ID_GITHUB_PKG | tr '[A-Z]' '[a-z]')
