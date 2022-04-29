@@ -25,7 +25,7 @@ RUN git fetch --all --tags --prune && \
       git checkout tags/$ORTOOLS_VERSION -b $ORTOOLS_VERSION && \
       mkdir build && \
       cd build && \
-      cmake -DBUILD_DEPS=ON -DCMAKE_INSTALL_PREFIX=/opt/or-tools .. && \
+      cmake -DBUILD_DEPS=ON .. && \
       make && \
       make test && \
       make install
