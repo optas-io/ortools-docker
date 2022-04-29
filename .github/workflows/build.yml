@@ -11,7 +11,7 @@ on:
 
 env:
   # TODO: Change variable to your image's name.
-  IMAGE_NAME: optasio/ortools
+  IMAGE_NAME: optas-io/ortools
   DOCKER_ID: optasioimg
 
 jobs:
